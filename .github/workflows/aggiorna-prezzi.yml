@@ -1,1 +1,43 @@
+name: Aggiorna prezzi carburanti
 
+on:
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  aggiorna:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Scarica CSV prezzi regionali
+        run: |
+          mkdir -p dati
+          curl -fsSL "https://www.mimit.gov.it/images/stories/carburanti/MediaRegionaleStradale.csv" \
+            -o dati/prezzi_regionali.csv \
+            -A "OsservaCarburanti/1.0 (GitHub Actions, dati open IODL 2.0)"
+
+      - name: Scarica CSV media nazionale autostrade
+        run: |
+          curl -fsSL "https://www.mimit.gov.it/images/stories/carburanti/MediaNazionaleAutostradale.csv" \
+            -o dati/prezzi_autostrade.csv \
+            -A "OsservaCarburanti/1.0 (GitHub Actions, dati open IODL 2.0)" || echo "autostrade non disponibili oggi, continuo comunque"
+
+      - name: Verifica che i file non siano vuoti
+        run: |
+          test -s dati/prezzi_regionali.csv || (echo "CSV regionale vuoto, aborto" && exit 1)
+          echo "Contenuto scaricato:"
+          head -5 dati/prezzi_regionali.csv
+
+      - name: Commit e push se ci sono modifiche
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add dati/
+          git diff --quiet --cached || git commit -m "Aggiornamento prezzi carburanti $(date -u +%Y-%m-%d)"
+          git push
