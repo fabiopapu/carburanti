@@ -35,7 +35,17 @@ def leggi_csv_mimit(percorso):
     inizio = 1 if righe[0].lower().startswith("estrazione") else 0
     sep = rileva_separatore(righe[inizio])
     reader = csv.DictReader(io.StringIO("\n".join(righe[inizio:])), delimiter=sep)
-    return [{(k or "").strip().lower(): (v or "").strip() for k, v in r.items()} for r in reader]
+    risultato = []
+    for r in reader:
+        pulito = {}
+        for k, v in r.items():
+            if k is None:
+                continue  # campi extra oltre l'ultima colonna attesa: scartati
+            if isinstance(v, list):
+                v = v[0] if v else ""  # non dovrebbe capitare per le chiavi note, ma per sicurezza
+            pulito[(k or "").strip().lower()] = (v or "").strip()
+        risultato.append(pulito)
+    return risultato
 
 
 def categoria(nome):
