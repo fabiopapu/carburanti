@@ -24,10 +24,20 @@ jobs:
         run: |
           curl -fsSL "https://www.mimit.gov.it/images/stories/carburanti/MediaNazionaleAutostradale.csv" -o dati/prezzi_autostrade.csv -A "OsservaCarburanti/1.0" || echo "autostrade non disponibili, continuo"
 
+      - name: Scarica anagrafica e prezzi puntuali di tutti gli impianti
+        run: |
+          curl -fsSL "https://www.mimit.gov.it/images/exportCSV/anagrafica_impianti_attivi.csv" -o /tmp/anagrafica.csv -A "OsservaCarburanti/1.0"
+          curl -fsSL "https://www.mimit.gov.it/images/exportCSV/prezzo_alle_8.csv" -o /tmp/prezzi_puntuali.csv -A "OsservaCarburanti/1.0"
+
+      - name: Comprimi in impianti.json
+        run: |
+          python3 costruisci_impianti.py /tmp/anagrafica.csv /tmp/prezzi_puntuali.csv dati/impianti.json
+          ls -lh dati/impianti.json
+
       - name: Verifica che i file non siano vuoti
         run: |
           test -s dati/prezzi_regionali.csv || (echo "CSV regionale vuoto, aborto" && exit 1)
-          head -5 dati/prezzi_regionali.csv
+          test -s dati/impianti.json || (echo "impianti.json vuoto, aborto" && exit 1)
 
       - name: Commit e push se ci sono modifiche
         run: |
