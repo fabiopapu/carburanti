@@ -1,1 +1,261 @@
 
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Osserva Carburanti · Prezzi regione per regione</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700;800&family=Saira:wght@400;500;600&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blu:#0b4ea2; --blu-scuro:#083a79;
+  --verde:#00693e;
+  --cemento:#eef0ee; --carta:#fff; --inchiostro:#161b20;
+  --grigio:#5b656e; --linea:#d5dad6; --rosso:#d64541;
+  --benzina:#2fb16b; --gasolio:#e0a800; --gpl:#3fa2e0; --metano:#3dbfa5;
+  --asfalto:#1b2126; --led:#ffd24a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Saira',system-ui,sans-serif;background:var(--cemento);color:var(--inchiostro);font-size:15px;line-height:1.5}
+h1,h2,h3{font-family:'Saira Condensed',sans-serif}
+
+header{background:var(--blu);color:#fff;border-bottom:6px solid #fff;box-shadow:0 3px 0 var(--blu-scuro)}
+.header-inner{max-width:1180px;margin:0 auto;padding:22px 20px 18px;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+header h1{font-size:clamp(26px,4.5vw,40px);font-weight:800;text-transform:uppercase;line-height:1}
+.header-sub{font-size:13px;opacity:.9;max-width:560px}
+.header-sub a{color:#fff}
+.badge-data{background:#fff;color:var(--blu);border-radius:6px;padding:8px 14px;font-family:'Saira Condensed';font-weight:700;text-transform:uppercase;font-size:14px;letter-spacing:.5px;white-space:nowrap}
+.header-azioni{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.btn-dona{
+  display:inline-flex;align-items:center;gap:7px;
+  background:#ffd140;color:#1b2126;text-decoration:none;
+  font-family:'Saira Condensed';font-weight:700;text-transform:uppercase;letter-spacing:.5px;font-size:13px;
+  border-radius:999px;padding:8px 16px;white-space:nowrap;
+  border:2px solid #1b2126;transition:transform .08s ease,filter .15s ease;
+}
+.btn-dona:hover{filter:brightness(1.06)}
+.btn-dona:active{transform:translateY(1px)}
+.btn-dona:focus-visible{outline:3px solid #fff;outline-offset:2px}
+
+main{max-width:1180px;margin:0 auto;padding:24px 20px 60px}
+
+.barra{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:7px;font-family:'Saira Condensed';font-weight:600;font-size:14px;text-transform:uppercase;letter-spacing:.5px;border:1.5px solid var(--linea);background:#fff;border-radius:999px;padding:8px 16px;cursor:pointer}
+.chip.attivo{border-color:var(--inchiostro);background:var(--inchiostro);color:#fff}
+.chip:focus-visible{outline:3px solid var(--gasolio);outline-offset:2px}
+.marchio{width:12px;height:12px;flex:none;display:inline-block;border:2px solid currentColor}
+.marchio.cerchio{border-radius:50%}
+.marchio.quadrato{border-radius:2px}
+.marchio.rombo{transform:rotate(45deg) scale(.85);border-radius:2px}
+.c-benzina{color:var(--benzina)}.c-gasolio{color:var(--gasolio)}.c-gpl{color:var(--gpl)}.c-metano{color:var(--metano)}
+.ordina select{padding:8px 10px;border:1px solid var(--linea);border-radius:7px;font-family:'Saira';font-size:14px}
+
+#stato{padding:48px 20px;text-align:center;color:var(--grigio)}
+#stato .titolo{font-family:'Saira Condensed';font-weight:700;font-size:18px;text-transform:uppercase;letter-spacing:.5px;color:var(--inchiostro)}
+#stato .err{color:var(--rosso)}
+#stato .spin{display:inline-block;width:26px;height:26px;border:3px solid var(--linea);border-top-color:var(--blu);border-radius:50%;animation:giro 1s linear infinite;margin-bottom:12px}
+@keyframes giro{to{transform:rotate(360deg)}}
+.avviso{background:#fff8e6;border:1px solid #f0dfa8;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:16px;display:none}
+
+.confronto-naz{background:var(--asfalto);border-radius:12px;border:3px solid #2f3941;color:#dfe5e9;padding:16px 18px;margin-bottom:18px;display:none}
+.confronto-naz h2{font-size:16px;text-transform:uppercase;letter-spacing:1.2px;color:#fff;margin-bottom:10px}
+.confronto-righe{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.confronto-cella{background:rgba(0,0,0,.35);border:1px solid #39434c;border-radius:8px;padding:10px 12px}
+.confronto-cella .etich{font-family:'Saira Condensed';font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:1px;color:#9fb0bc}
+.confronto-cella .val{font-family:'IBM Plex Mono';font-weight:700;font-size:24px;color:var(--led);text-shadow:0 0 10px rgba(255,210,74,.35)}
+.confronto-cella .sub{font-size:11px;color:#8b99a4}
+
+.griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:14px}
+.regione{background:var(--carta);border:1px solid var(--linea);border-radius:10px;padding:14px 16px}
+.regione .testa{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.regione h2{font-size:18px;text-transform:uppercase;letter-spacing:.4px}
+.regione .rank{font-family:'IBM Plex Mono';font-size:12px;color:var(--grigio)}
+.regione .evidenza{margin-top:6px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.regione .prezzo{font-family:'IBM Plex Mono';font-weight:700;font-size:30px}
+.regione .unita{font-size:12px;color:var(--grigio)}
+.delta{font-family:'IBM Plex Mono';font-weight:600;font-size:12px;border-radius:5px;padding:1px 6px}
+.delta.sotto{background:#e8f6ec;color:var(--verde)}
+.delta.sopra{background:#fbebea;color:var(--rosso)}
+.delta.pari{background:#f0f2f0;color:var(--grigio)}
+.barra-prezzo{height:5px;background:#eceeec;border-radius:3px;margin-top:10px;overflow:hidden}
+.barra-prezzo span{display:block;height:100%;border-radius:3px}
+.altri-fuel{margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:13px}
+.altri-fuel div{display:flex;justify-content:space-between;gap:6px}
+.altri-fuel .v{font-family:'IBM Plex Mono';font-weight:600}
+.nd{color:var(--grigio);font-size:13px}
+
+footer{max-width:1180px;margin:0 auto;padding:0 20px 40px;font-size:12px;color:var(--grigio)}
+footer a{color:var(--blu)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div>
+      <h1>⛽ Osserva Carburanti</h1>
+      <p class="header-sub">Prezzi medi ufficiali di benzina, gasolio, GPL e metano, regione per regione, con confronto stradale/autostrada. Fonte: <a href="https://www.mimit.gov.it/it/prezzo-medio-carburanti/regioni" target="_blank" rel="noopener">MIMIT</a>, decreto 31 marzo 2023, rilevazione ore 8.</p>
+    </div>
+    <div class="header-azioni">
+      <div class="badge-data" id="badge-data">Caricamento…</div>
+      <a class="btn-dona" href="https://www.paypal.com/paypalme/fabiopapurello84" target="_blank" rel="noopener">☕ Offrimi un caffè</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="avviso" id="avviso"></div>
+
+  <div class="barra" id="barra" style="display:none">
+    <div class="chips" id="chips" role="group" aria-label="Carburante">
+      <button class="chip attivo" data-cat="benzina"><span class="marchio cerchio c-benzina"></span>Benzina</button>
+      <button class="chip" data-cat="gasolio"><span class="marchio quadrato c-gasolio"></span>Gasolio</button>
+      <button class="chip" data-cat="gpl"><span class="marchio rombo c-gpl"></span>GPL</button>
+      <button class="chip" data-cat="metano"><span class="marchio rombo c-metano"></span>Metano</button>
+    </div>
+    <div class="ordina">
+      <label for="ordine" style="font-size:13px;color:var(--grigio)">Ordina:</label>
+      <select id="ordine">
+        <option value="prezzo">Dalla più economica</option>
+        <option value="prezzo-desc">Dalla più cara</option>
+        <option value="nome">Alfabetico</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="confronto-naz" id="confronto-naz">
+    <h2>Italia · media nazionale</h2>
+    <div class="confronto-righe" id="confronto-righe"></div>
+  </div>
+
+  <div id="stato">
+    <div class="spin" aria-hidden="true"></div>
+    <div class="titolo">Recupero i prezzi aggiornati…</div>
+  </div>
+
+  <div class="griglia" id="griglia"></div>
+</main>
+
+<footer>
+  <p>Dati: Ministero delle Imprese e del Made in Italy, prezzi medi giornalieri ex decreto 31 marzo 2023 (licenza <a href="http://www.dati.gov.it/iodl/2.0/" target="_blank" rel="noopener">IODL 2.0</a>). Benzina e gasolio in modalità self, GPL e metano in modalità servito; metano in €/kg, gli altri in €/litro. Rete stradale, escluse autostrade salvo il riquadro dedicato. Pagina non affiliata al MIMIT.</p>
+</footer>
+
+<script>
+"use strict";
+const NOMI = {benzina:"Benzina", gasolio:"Gasolio", gpl:"GPL", metano:"Metano"};
+const EROGAZIONE = {benzina:"self", gasolio:"self", gpl:"servito", metano:"servito"};
+let DATI = null, cat = "benzina";
+
+const $ = s => document.querySelector(s);
+const fmt = p => p.toFixed(3).replace(".", ",");
+const unita = c => c === "metano" ? "€/kg" : "€/L";
+
+async function carica(){
+  try {
+    const r = await fetch("/api/prezzi");
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.errore || "errore server");
+    DATI = j;
+    $("#badge-data").textContent = j.dataAggiornamento
+      ? "Rilevazione ore 8 · " + j.dataAggiornamento.replace(/-/g, "/")
+      : "Dati aggiornati";
+    if (j.avviso){
+      const av = $("#avviso");
+      av.textContent = "⚠ " + j.avviso;
+      av.style.display = "block";
+    }
+    $("#stato").style.display = "none";
+    $("#barra").style.display = "flex";
+    disegna();
+  } catch (e){
+    $("#stato").innerHTML =
+      '<div class="titolo err">Dati non disponibili</div>' +
+      '<div style="margin-top:8px;font-size:13px">Il server non è riuscito a contattare il Ministero in questo momento. Riprova tra qualche minuto.</div>';
+  }
+}
+
+function mediaNazionale(c){
+  const v = Object.values(DATI.regioni).map(r => r[c]).filter(x => typeof x === "number");
+  return v.length ? v.reduce((s,x) => s + x, 0) / v.length : null;
+}
+
+function disegna(){
+  const naz = mediaNazionale(cat);
+  const righe = [];
+  if (naz !== null){
+    righe.push(`<div class="confronto-cella">
+      <div class="etich">${NOMI[cat]} · rete stradale</div>
+      <div class="val">${fmt(naz)} <span style="font-size:12px;color:#9fb0bc">${unita(cat)}</span></div>
+      <div class="sub">media delle regioni · ${EROGAZIONE[cat]}</div></div>`);
+  }
+  if (DATI.autostrade && typeof DATI.autostrade[cat] === "number"){
+    const a = DATI.autostrade[cat];
+    const diff = naz !== null ? a - naz : null;
+    righe.push(`<div class="confronto-cella">
+      <div class="etich">${NOMI[cat]} · autostrada</div>
+      <div class="val">${fmt(a)} <span style="font-size:12px;color:#9fb0bc">${unita(cat)}</span></div>
+      <div class="sub">${diff !== null ? (diff >= 0 ? "+" : "−") + fmt(Math.abs(diff)) + " rispetto alla rete stradale" : "media nazionale"}${DATI.dataAutostrade ? " · agg. " + DATI.dataAutostrade.replace(/-/g,"/") : ""}</div></div>`);
+  }
+  $("#confronto-righe").innerHTML = righe.join("");
+  $("#confronto-naz").style.display = righe.length ? "block" : "none";
+
+  const ordine = $("#ordine").value;
+  const nomi = Object.keys(DATI.regioni);
+  const val = n => DATI.regioni[n][cat] ?? Infinity;
+  if (ordine === "prezzo") nomi.sort((a,b) => val(a) - val(b) || a.localeCompare(b,"it"));
+  else if (ordine === "prezzo-desc") nomi.sort((a,b) => val(b) - val(a) || a.localeCompare(b,"it"));
+  else nomi.sort((a,b) => a.localeCompare(b,"it"));
+
+  const presenti = nomi.map(n => DATI.regioni[n][cat]).filter(x => typeof x === "number");
+  const minV = Math.min(...presenti), maxV = Math.max(...presenti);
+
+  $("#griglia").innerHTML = nomi.map((nome, i) => {
+    const r = DATI.regioni[nome];
+    const p = r[cat];
+    const altri = Object.keys(NOMI).filter(c => c !== cat && typeof r[c] === "number");
+    let corpo;
+    if (typeof p === "number"){
+      const diff = p - naz;
+      const classe = Math.abs(diff) < 0.0005 ? "pari" : diff < 0 ? "sotto" : "sopra";
+      const segno = Math.abs(diff) < 0.0005 ? "=" : diff < 0 ? "−" : "+";
+      const largh = maxV > minV ? ((p - minV) / (maxV - minV)) * 100 : 50;
+      const colore = `hsl(${120 - (maxV > minV ? (p - minV) / (maxV - minV) : .5) * 120} 55% 42%)`;
+      corpo = `
+        <div class="evidenza">
+          <span class="prezzo">${fmt(p)}</span>
+          <span class="unita">${unita(cat)}</span>
+          <span class="delta ${classe}" title="Differenza dalla media nazionale">${segno}${fmt(Math.abs(diff))}</span>
+        </div>
+        <div class="barra-prezzo"><span style="width:${Math.max(6, largh)}%;background:${colore}"></span></div>
+        <div class="altri-fuel">
+          ${altri.map(c => `<div><span>${NOMI[c]}</span><span class="v">${fmt(r[c])}</span></div>`).join("")}
+        </div>`;
+    } else {
+      corpo = `<div class="nd">Prezzo medio ${NOMI[cat].toLowerCase()} non disponibile oggi.</div>
+        <div class="altri-fuel">${altri.map(c => `<div><span>${NOMI[c]}</span><span class="v">${fmt(r[c])}</span></div>`).join("")}</div>`;
+    }
+    return `<div class="regione">
+      <div class="testa"><h2>${nome}</h2><span class="rank">${typeof p === "number" && ordine !== "nome" ? "#" + (i + 1) : ""}</span></div>
+      ${corpo}
+    </div>`;
+  }).join("");
+}
+
+$("#chips").addEventListener("click", e => {
+  const chip = e.target.closest(".chip");
+  if (!chip) return;
+  document.querySelectorAll("#chips .chip").forEach(c => c.classList.remove("attivo"));
+  chip.classList.add("attivo");
+  cat = chip.dataset.cat;
+  disegna();
+});
+$("#ordine").addEventListener("input", disegna);
+
+carica();
+</script>
+</body>
+</html>
