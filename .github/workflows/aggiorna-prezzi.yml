@@ -34,6 +34,11 @@ jobs:
           python3 costruisci_impianti.py /tmp/anagrafica.csv /tmp/prezzi_puntuali.csv dati/impianti.json
           ls -lh dati/impianti.json
 
+      - name: Calcola indice di rischio prezzo carburanti (Brent + EUR/USD)
+        run: |
+          python3 aggiorna_rischio.py dati/rischio.json
+        continue-on-error: true
+
       - name: Verifica che i file non siano vuoti
         run: |
           test -s dati/prezzi_regionali.csv || (echo "CSV regionale vuoto, aborto" && exit 1)
