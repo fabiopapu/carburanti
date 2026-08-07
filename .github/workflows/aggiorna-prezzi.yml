@@ -39,6 +39,11 @@ jobs:
           python3 aggiorna_rischio.py dati/rischio.json
         continue-on-error: true
 
+      - name: Scarica ultime notizie sui carburanti (titolo/fonte/link)
+        run: |
+          python3 aggiorna_notizie.py dati/notizie.json
+        continue-on-error: true
+
       - name: Verifica che i file non siano vuoti
         run: |
           test -s dati/prezzi_regionali.csv || (echo "CSV regionale vuoto, aborto" && exit 1)
